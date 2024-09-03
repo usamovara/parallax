@@ -1,74 +1,67 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Мобильный параллакс фон</title>
-        <style>
-            body,
-            html {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-            }
-            canvas {
-                display: block;
-            }
-        </style>
-    </head>
-    <body>
-        <canvas id="parallaxCanvas"></canvas>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rive Анимация (Advanced)</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        #canvas {
+            width: 500px;
+            height: 500px;
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
 
-        <script>
-            const canvas = document.getElementById("parallaxCanvas");
-            const ctx = canvas.getContext("2d");
+    <script src="https://unpkg.com/@rive-app/canvas-advanced-single"></script>
+    <script>
+        (async function() {
+            const rive = await import('https://unpkg.com/@rive-app/canvas-advanced-single');
+            
+            const canvas = document.getElementById('canvas');
+            const { Alignment, Fit, Layout, RuntimeLoader } = rive;
 
-            // Устанавливаем размер canvas
-            function resizeCanvas() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            resizeCanvas();
-            window.addEventListener("resize", resizeCanvas);
-
-            // Создаем фоновое изображение
-            const backgroundImage = new Image();
-            backgroundImage.src =
-                "https://www.allaboutbirds.org/guide/assets/photo/570814301-720px.jpg"; // Замените на URL вашего изображения
-
-            let tiltLR = 0,
-                tiltFB = 0;
-
-            // Обработчик события ориентации устройства
-            window.addEventListener("deviceorientation", function (event) {
-                tiltLR = event.gamma; // Наклон влево-вправо
-                tiltFB = event.beta; // Наклон вперед-назад
+            // Загрузка среды выполнения Rive
+            await RuntimeLoader.loadRuntime();
+            
+            // Создание нового экземпляра Rive
+            const r = new rive.Rive({
+                src: 'https://cdn.rive.app/animations/vehicles.riv',
+                canvas: canvas,
+                autoplay: true,
+                stateMachines: 'bumpy',
+                layout: new Layout({
+                    fit: Fit.Contain,
+                    alignment: Alignment.Center,
+                }),
+                onLoad: () => {
+                    console.log('Rive анимация загружена');
+                },
+                onError: (err) => {
+                    console.error('Ошибка при загрузке Rive анимации:', err);
+                },
             });
 
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Вычисляем смещение фона на основе наклона
-                let offsetX = (tiltLR / 90) * (canvas.width / 4);
-                let offsetY = (tiltFB / 90) * (canvas.height / 4);
-
-                // Рисуем фон с учетом смещения
-                ctx.drawImage(
-                    backgroundImage,
-                    -offsetX,
-                    -offsetY,
-                    canvas.width + offsetX * 2,
-                    canvas.height + offsetY * 2,
-                );
-
-                requestAnimationFrame(draw);
-            }
-
-            backgroundImage.onload = function () {
-                draw();
-            };
-        </script>
-    </body>
+            // Обработчик изменения размера окна
+            window.addEventListener('resize', () => {
+                r.layout = new Layout({
+                    fit: Fit.Contain,
+                    alignment: Alignment.Center,
+                });
+            });
+        })();
+    </script>
+</body>
 </html>
